@@ -1,18 +1,48 @@
-#!/usr/bin/env bash
+#!/bin/bash
+# Update package lists
+apt-get update -y
+
 # Install Nginx
-apt-get -y update
-apt-get -y install nginx
+apt-get install nginx -y
 
-# Configure Nginx to serve "Holberton School" at the root
-echo "Holberton School for the win!" > /var/www/html/index.nginx-debian.html
+# Create custom HTML file with required content
+cat > /var/www/html/index.nginx-debian.html <<EOF
+Holberton School for the win!
+EOF
 
-# Ensure Nginx is running and restart it (without systemctl)
-# Check if nginx is active
-if pgrep -x "nginx" > /dev/null
+# Configure Nginx to listen on port 80 (default configuration)
+# The default config usually handles this, but we'll ensure it's correct
+cat > /etc/nginx/sites-available/default <<EOF
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+
+    root /var/www/html;
+    index index.html index.htm index.nginx-debian.html;
+
+    server_name _;
+
+    location / {
+        try_files \$uri \$uri/ =404;
+    }
+}
+EOF
+
+# Restart Nginx without using systemctl
+service nginx restart
+
+# Verify Nginx is running
+if ! pgrep -x "nginx" > /dev/null
 then
-    # If active, send HUP signal to reload configuration
-    nginx -s reload
-else
-    # If not active, start nginx
-    service nginx start
+    echo "Nginx failed to start"
+    exit 1
 fi
+
+# Verify the configuration works
+curl_output=$(curl -s localhost)
+if [[ "$curl_output" != "Holberton School for the win!" ]]; then
+    echo "Nginx is not serving the correct content"
+    exit 1
+fi
+
+echo "Nginx installation and configuration complete"
