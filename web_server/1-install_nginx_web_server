@@ -1,48 +1,33 @@
 #!/usr/bin/env bash
-# Update package lists
-apt-get update -y
+# Configures a new Ubuntu machine by installing
+# Nginx where it should be listening on port 80
+# Serve a page that would return a Holberton School string
 
-# Install Nginx
-apt-get install nginx -y
+echo -e "Updating and installing Nginx.\n"
+# Update package lists and install Nginx quietly
+sudo apt-get update -y -qq && \
+	sudo apt-get install nginx -y
 
-# Create custom HTML file with required content
-cat > /var/www/html/index.nginx-debian.html <<EOF
-Holberton School for the win!
-EOF
+echo -e "\nSetting up some minor stuff.\n"
 
-# Configure Nginx to listen on port 80 (default configuration)
-# The default config usually handles this, but we'll ensure it's correct
-cat > /etc/nginx/sites-available/default <<EOF
-server {
-    listen 80 default_server;
-    listen [::]:80 default_server;
+# Starting nginx service
+sudo service nginx start
 
-    root /var/www/html;
-    index index.html index.htm index.nginx-debian.html;
+# Allowing nginx on firewall
+sudo ufw allow 'Nginx HTTP'
 
-    server_name _;
+# Give the user ownership to website files for easy editing
+sudo chown -R "$USER":"$USER" /var/www/html
+# Set permissions for web content directory
+sudo chmod -R 755 /var/www
 
-    location / {
-        try_files \$uri \$uri/ =404;
-    }
-}
-EOF
+# Backup default index
+cp /var/www/html/index.nginx-debian.html /var/www/html/index.nginx-debian.html.bckp
 
-# Restart Nginx without using systemctl
-service nginx restart
+# Creating new index with "Holberton School"
+echo -e "Holberton School" | dd status=none of=/var/www/html/index.nginx-debian.html
 
-# Verify Nginx is running
-if ! pgrep -x "nginx" > /dev/null
-then
-    echo "Nginx failed to start"
-    exit 1
-fi
+# Restarting nginx to apply changes
+sudo service nginx restart
 
-# Verify the configuration works
-curl_output=$(curl -s localhost)
-if [[ "$curl_output" != "Holberton School for the win!" ]]; then
-    echo "Nginx is not serving the correct content"
-    exit 1
-fi
-
-echo "Nginx installation and configuration complete"
+echo -e "\nCompleted."
