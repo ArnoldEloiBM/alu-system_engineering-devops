@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Install Nginx
+apt-get -y update
+apt-get -y install nginx
+
+# Configure Nginx to serve "Holberton School" at the root
+echo "Holberton School for the win!" > /var/www/html/index.nginx-debian.html
+
+# Ensure Nginx is running and restart it (without systemctl)
+# Check if nginx is active
+if pgrep -x "nginx" > /dev/null
+then
+    # If active, send HUP signal to reload configuration
+    nginx -s reload
+else
+    # If not active, start nginx
+    service nginx start
+fi
