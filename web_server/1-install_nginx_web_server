@@ -1,33 +1,14 @@
 #!/usr/bin/env bash
-# Configures a new Ubuntu machine by installing
-# Nginx where it should be listening on port 80
-# Serve a page that would return a Holberton School string
+# This script installs and configures Nginx on an Ubuntu server.
 
-echo -e "Updating and installing Nginx.\n"
-# Update package lists and install Nginx quietly
-sudo apt-get update -y -qq && \
-	sudo apt-get install nginx -y
+# Update the package list
+apt-get update -y
 
-echo -e "\nSetting up some minor stuff.\n"
+# Install Nginx
+apt-get install -y nginx
 
-# Starting nginx service
-sudo service nginx start
+# Create a custom HTML file for the root page
+echo "Holberton School for the win!" > /var/www/html/index.html
 
-# Allowing nginx on firewall
-sudo ufw allow 'Nginx HTTP'
-
-# Give the user ownership to website files for easy editing
-sudo chown -R "$USER":"$USER" /var/www/html
-# Set permissions for web content directory
-sudo chmod -R 755 /var/www
-
-# Backup default index
-cp /var/www/html/index.nginx-debian.html /var/www/html/index.nginx-debian.html.bckp
-
-# Creating new index with "Holberton School"
-echo -e "Holberton School" | dd status=none of=/var/www/html/index.nginx-debian.html
-
-# Restarting nginx to apply changes
-sudo service nginx restart
-
-echo -e "\nCompleted."
+# Restart Nginx without using systemctl
+service nginx restart
